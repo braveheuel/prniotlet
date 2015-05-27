@@ -15,8 +15,8 @@ def load(number="", overwrite=False):
     response = requests.get('http://xkcd.com/%s' % number)
     parsed_body = html.fromstring(response.text)
     meta_data = {}
-    meta_data["description"] = parsed_body.xpath('//*[@id="comic"]/img/@title')[0]
-    meta_data["name"] = parsed_body.xpath('//*[@id="comic"]/img/@alt')[0]
+    meta_data["description"] = parsed_body.xpath('//*[@id="comic"]/img/@title')[0].__str__()
+    meta_data["name"] = parsed_body.xpath('//*[@id="comic"]/img/@alt')[0].__str__()
     meta_data["image_source"] = "http:%s" % (parsed_body.xpath('//*[@id="comic"]/img/@src')[0])
     meta_data["instance"] = os.path.split(os.path.splitext(meta_data["image_source"])[0])[1]
     meta_data["directory"] = "%s%s" % (cacheDir, meta_data["instance"])
