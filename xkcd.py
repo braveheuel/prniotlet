@@ -39,6 +39,7 @@ def _save_meta_data(data):
 def _convert_image(image, data):
     converted_image = image.convert("1", dither=Image.NEAREST)
     converted_image.save("%s%s%s" % (data["directory"], os.sep, "converted.png"), "PNG")
+    data["image"] = converted_image
 
 def _download_image(data):
     url2retrieve = data["image_source"]
