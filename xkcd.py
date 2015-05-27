@@ -31,6 +31,7 @@ def load(number="", overwrite=False):
     image = _download_image(meta_data)
     _convert_image(image, meta_data)
     _save_meta_data(meta_data)
+    return meta_data
 
 def _save_meta_data(data):
     with open("%s%s%s" % (data["directory"], os.sep, "meta.txt"), "wb") as outfile:
