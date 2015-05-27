@@ -6,7 +6,7 @@ import argparse
 import os
 import io
 from PIL import Image
-import json
+import pickle
 
 cacheDir=os.path.expanduser("~") + "/.xkcd/"
 
@@ -29,9 +29,8 @@ def load(number=""):
     _save_meta_data(meta_data)
 
 def _save_meta_data(data):
-    outfile = open("%s%s%s" % (data["directory"], os.sep, "meta.txt"), "w")
-    json.dump(data, outfile)
-    outfile.close()
+    with open("%s%s%s" % (data["directory"], os.sep, "meta.txt"), "wb") as outfile:
+        pickle.dump(data, outfile)
 
 def _convert_image(image, data):
     converted_image = image.convert("1", dither=Image.NEAREST)
