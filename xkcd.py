@@ -8,6 +8,8 @@ import io
 from PIL import Image
 import shutil
 import pickle
+from escpos import *
+import qrcode
 
 cacheDir=os.path.expanduser("~") + "/.cache/xkcd/"
 pickle_filename = "data.pickle"
@@ -65,9 +67,26 @@ def _save_meta_data(data):
         pickle.dump(data, outfile)
 
 def _convert_image(image, data):
-    converted_image = image.convert("1", dither=Image.NEAREST)
-    converted_image.save("%s%s%s" % (data["directory"], os.sep, "converted.png"), "PNG")
-    data["image"] = converted_image
+    # Rotate if width > height (always have stripe)
+    if image.size[0] > image.size[1]:
+        image = image.rotate(90, expand=1)
+
+    # Resize
+    if image.size[0] <= 1.5*print_width:
+        ratio = float(print_width) / float(image.size[0])
+        new_height = int(float(image.size[1])*float(ratio))
+        image = image.resize((print_width, new_height))
+    else:
+        # Create QR code
+        qr = qrcode.QRCode()
+        qr.add_data(data.image_source)
+        image = qr.make_image(size=print_width)._img
+        image = image.resize((print_width, print_width))
+
+    # Dither
+    converted_image = image.convert("1", dither=Image.FLOYDSTEINBERG)
+    converted_image.save("%s%s%s" % (data.directory, os.sep, "converted.png"), "PNG")
+    data.setImage(converted_image)
 
 def _download_image(data):
     print("Downloading image...")
