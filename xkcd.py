@@ -104,6 +104,17 @@ def _load_from_file(path):
         pckl = pickle.load(infile)
     return pckl
 
+def print_data(data):
+    ep = printer.File("/dev/usb/lp0")
+    ep.hw("init")
+    ep.set(align="center", type="b")
+    ep.block_text(data.name, 16)
+    ep.text("\n")
+    ep.set(align="left", type="normal")
+    #ep.image("%s%s%s" % (data["directory"], os.sep, "converted.png"))
+    ep.block_text(data.description)
+    ep.text("\n\n\n\n")
+
 if __name__ == "__main__":
     if not os.path.exists(cacheDir):
         os.makedirs(cacheDir)
@@ -111,4 +122,5 @@ if __name__ == "__main__":
     parser.add_argument('comic_number', metavar="number", type=str, help="Number of comic to load", default="", nargs="*")
     parser.add_argument('-f', '--overwrite', action='store_true', help="Overwrite if already exists")
     args = parser.parse_args()
-    load("" if args.comic_number == "" else args.comic_number[0])
+    print_data(load("" if args.comic_number == "" else args.comic_number[0], args.overwrite))
+
