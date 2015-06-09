@@ -11,6 +11,8 @@ import pickle
 
 cacheDir=os.path.expanduser("~") + "/.cache/xkcd/"
 pickle_filename = "data.pickle"
+print_width = 384
+
 class xkcdDataStructure(object):
     description = None
     name = None
