@@ -9,7 +9,7 @@ from PIL import Image
 import shutil
 import pickle
 
-cacheDir=os.path.expanduser("~") + "/.xkcd/"
+cacheDir=os.path.expanduser("~") + "/.cache/xkcd/"
 pickle_filename = "data.pickle"
 
 def load(number="", overwrite=False):
