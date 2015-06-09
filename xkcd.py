@@ -101,7 +101,8 @@ def _download_image(data):
 
 def _load_from_file(path):
     with open("%s%s%s" % (path, os.sep, pickle_filename), "rb") as infile:
-        return pickle.load(infile)
+        pckl = pickle.load(infile)
+    return pckl
 
 if __name__ == "__main__":
     if not os.path.exists(cacheDir):
