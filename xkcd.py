@@ -11,6 +11,24 @@ import pickle
 
 cacheDir=os.path.expanduser("~") + "/.cache/xkcd/"
 pickle_filename = "data.pickle"
+class xkcdDataStructure(object):
+    description = None
+    name = None
+    image_source = None
+    instance = None
+    directory = None
+    image = None
+
+    def getImage(self):
+        if image:
+            return Image.frombytes(**self.image)
+
+    def setImage(self, image):
+        self.image = dict(
+            data = image.tobytes(),
+            size = image.size,
+            mode = image.mode
+        )
 
 def load(number="", overwrite=False):
     response = requests.get('http://xkcd.com/%s' % number)
