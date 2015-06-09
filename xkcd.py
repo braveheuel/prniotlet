@@ -41,6 +41,11 @@ def load(number="", overwrite=False):
     meta_data.image_source = "http:%s" % (parsed_body.xpath('//*[@id="comic"]//img/@src')[0])
     meta_data.instance = os.path.split(os.path.splitext(meta_data.image_source)[0])[1]
     meta_data.directory = "%s%s" % (cacheDir, meta_data.instance)
+
+    if os.path.isdir(meta_data.directory) and overwrite:
+        print("Already downloaded %s, removing first..." % meta_data.instance)
+        shutil.rmtree(meta_data.directory)
+
     if os.path.isdir(meta_data.directory):
         print("Already downloaded: %s" % meta_data.instance)
         print("Using pickled variant")
