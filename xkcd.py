@@ -14,6 +14,7 @@ import qrcode
 cacheDir=os.path.expanduser("~") + "/.cache/xkcd/"
 pickle_filename = "data.pickle"
 print_width = 384
+printer_file = "/dev/usb/lp0"
 
 class xkcdDataStructure(object):
     description = None
@@ -103,7 +104,7 @@ def _load_from_file(path):
     return pckl
 
 def print_data(data):
-    ep = printer.File("/dev/usb/lp0")
+    ep = printer.File(printer_file)
     ep.hw("init")
     ep.set(align="center", type="b")
     ep.block_text(data.name, 16)
