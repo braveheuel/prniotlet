@@ -109,7 +109,7 @@ def print_data(data):
     ep.block_text(data.name, 16)
     ep.text("\n")
     ep.set(align="left", type="normal")
-    #ep.image("%s%s%s" % (data["directory"], os.sep, "converted.png"))
+    ep.direct_image(data.getImage())
     ep.block_text(data.description)
     ep.text("\n\n\n\n")
 
