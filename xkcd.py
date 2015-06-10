@@ -68,7 +68,7 @@ def _save_meta_data(data):
 def _convert_image(image, data):
     # Rotate if width > height (always have stripe)
     if image.size[0] > image.size[1]:
-        image = image.rotate(90, expand=1)
+        image = image.rotate(270, expand=1)
 
     # Resize
     if image.size[0] <= 1.5*print_width:
