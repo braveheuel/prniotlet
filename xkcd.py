@@ -24,7 +24,7 @@ class xkcdDataStructure(object):
     image = None
 
     def getImage(self):
-        if image:
+        if self.image:
             return Image.frombytes(**self.image)
 
     def setImage(self, image):
