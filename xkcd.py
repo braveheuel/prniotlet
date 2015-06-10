@@ -58,8 +58,6 @@ def load(number="", overwrite=False):
         _convert_image(image, meta_data)
         _save_meta_data(meta_data)
 
-    print(meta_data)
-
     return meta_data
 
 def _save_meta_data(data):
