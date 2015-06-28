@@ -44,6 +44,7 @@ def load(number="", overwrite=False):
     meta_data.image_source = "http:%s" % (parsed_body.xpath('//*[@id="comic"]//img/@src')[0])
     meta_data.instance = os.path.split(os.path.splitext(meta_data.image_source)[0])[1]
     meta_data.directory = "%s%s" % (cacheDir, meta_data.instance)
+    is_new = True
 
     if os.path.isdir(meta_data.directory) and overwrite:
         print("Already downloaded %s, removing first..." % meta_data.instance)
@@ -53,13 +54,14 @@ def load(number="", overwrite=False):
         print("Already downloaded: %s" % meta_data.instance)
         print("Using pickled variant")
         meta_data = _load_from_file(meta_data.directory)
+        is_new = False
     else:
         os.makedirs(meta_data.directory)
         image = _download_image(meta_data)
         _convert_image(image, meta_data)
         _save_meta_data(meta_data)
 
-    return meta_data
+    return (meta_data, is_new)
 
 def _save_meta_data(data):
     with open("%s%s%s" % (data.directory, os.sep, pickle_filename), "wb") as outfile:
@@ -111,6 +113,7 @@ def print_data(data):
     ep.text("\n")
     ep.set(align="left", type="normal")
     ep.direct_image(data.getImage())
+    ep.text("\n")
     ep.block_text(data.description)
     ep.text("\n\n\n\n")
 
@@ -120,6 +123,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Load image and description of xkcd')
     parser.add_argument('comic_number', metavar="number", type=str, help="Number of comic to load", default="", nargs="*")
     parser.add_argument('-f', '--overwrite', action='store_true', help="Overwrite if already exists")
+    parser.add_argument('-p', '--print_if_new', action='store_true', help="Print only if new")
     args = parser.parse_args()
-    print_data(load("" if args.comic_number == "" else args.comic_number[0], args.overwrite))
+    (data, new_comic) = load("" if args.comic_number == "" else args.comic_number[0], args.overwrite)
+    if (new_comic and args.print_if_new) or not args.print_if_new:
+        print_data(data)
+    else:
+        print("Not printing, because of argument print_if_new")
 
