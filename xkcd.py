@@ -113,6 +113,7 @@ def print_data(data):
     ep.text("\n")
     ep.set(align="left", type="normal")
     ep.direct_image(data.getImage())
+    ep.text("\n")
     ep.block_text(data.description)
     ep.text("\n\n\n\n")
 
