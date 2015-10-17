@@ -12,11 +12,16 @@ Print party gag after keypress
 from escpos import *
 from PIL import Image
 import subprocess
+import pigpio
+import logging
 
 print_width = 384
 printer_file = "/dev/usb/lp0"
 logo = "/home/ch/Bilder/party-logo.png"
 underline = "/home/ch/Bilder/underline.png"
+TASTER = 4
+
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
 
 def Umlaut_toASCII(s):
     s = s.replace('ä', "ae")
@@ -28,29 +33,52 @@ def Umlaut_toASCII(s):
     s = s.replace('ß', "ss")
     return s
 
-def main():
-    """Main Function"""
-    img = Image.open(logo)
-    img_underline = Image.open(underline)
-    ep = printer.File(printer_file)
-    ep.hw("init")
-    ep.charcode("EURO")
-    ep.direct_image(img)
-    ep.text("\n")
+def print_note(ep, header, footer):
+    logging.info("Call fortune...")
     fortprocess = subprocess.Popen("fortune -e /home/ch/Dokumente/fortune/ruhrpott /home/ch/Dokumente/fortune/ruhrpott-trilogie", stdout=subprocess.PIPE, shell=True)
     (output, err) = fortprocess.communicate()
 
      ## Wait for date to terminate. Get return returncode ##
     p_status = fortprocess.wait()
+    logging.info("fortune finished")
     if p_status == 0:
-        #print(output)
-        print("output: %s\n" % output)
+        ep.hw("init")
+        logging.debug("Printing header...")
+        ep.direct_image(header)
+        ep.text("\n")
         text = Umlaut_toASCII(output.decode("utf-8"))
-        print("text: %s\n" % text)
+        logging.info("Printing text")
         ep.block_text(text)
-    ep.text("\n")
-    ep.direct_image(img_underline)
-    ep.text("\n\n\n\n")
+        ep.text("\n")
+        logging.debug("Printing footer")
+        ep.direct_image(footer)
+        ep.text("\n\n\n\n")
+        ep.flush()
+        logging.info("Printing finished")
+    else:
+        ep.text("Fehler: Kein Spruch verfuegbar")
+        ep.text("\n\n\n\n")
+
+
+def main():
+    """Main Function"""
+    logging.info("Starting... Loading Logo...")
+    img = Image.open(logo)
+    logging.info("Loading footer...")
+    img_underline = Image.open(underline)
+    ep = printer.File(printer_file)
+    pi = pigpio.pi()
+    pi.set_mode(TASTER, pigpio.INPUT)
+
+    logging.info("Going into loop...")
+    while True:
+        if pi.wait_for_edge(TASTER):
+            logging.info("Taster was pressed!")
+            print_note(ep, img, img_underline)
+        else:
+            logging.info("wait_for_edge timeout occurred.")
+    logging.debug("Left the loop!")
+
 
 if __name__ == "__main__":
     main()
