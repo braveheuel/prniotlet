@@ -11,7 +11,6 @@ Print party gag after keypress
 """
 from escpos import *
 from PIL import Image
-import subprocess
 import pigpio
 import logging
 from datetime import date
@@ -37,27 +36,6 @@ def Umlaut_toASCII(s):
     s = s.replace('Ü', "Ue")
     s = s.replace('ß', "ss")
     return s
-
-def print_note(ep, header, footer):
-
-
-    if p_status == 0:
-        ep.hw("init")
-        logging.debug("Printing header...")
-        ep.direct_image(header)
-        ep.text("\n")
-        text = Umlaut_toASCII(output.decode("utf-8"))
-        logging.info("Printing text")
-        ep.block_text(text)
-        ep.text("\n")
-        logging.debug("Printing footer")
-        ep.direct_image(footer)
-        ep.text("\n\n\n\n")
-        ep.flush()
-        logging.info("Printing finished")
-    else:
-        ep.text("Fehler: Kein Spruch verfuegbar")
-        ep.text("\n\n\n\n")
 
 def print_advent_day():
     if date.today() < start_date:
