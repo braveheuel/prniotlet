@@ -54,14 +54,13 @@ def print_advent_day():
         print_day(date.today().day)
 
 def print_day(advent_day):
-    wd = "{0}/{1}".format(doc, advent_day)
-    logging.info("Path: %s", wd)
-    img = Image.open("{0}/{1}.png".format(wd, advent_day))
-    ep.text("\n")
+    logging.info("Starting with advent day %d", advent_day)
+    img = Image.open("{0}/{1}.png".format(doc, advent_day))
     ep.direct_image(img)
+    ep.text("\n")
     ep.flush()
     logging.info("Printing image done.")
-    f = open("{0}/{1}/t.txt".format(doc, advent_day), 'r')
+    f = open("{0}/{1}.txt".format(doc, advent_day), 'r')
     logging.info("Reading text...")
     x = f.readlines()
     for i in x:
@@ -83,10 +82,7 @@ def main():
     while True:
         if pi.wait_for_edge(TASTER):
             logging.info("Taster was pressed!")
-            #print_advent_day()
-            print_day(1)
-        else:
-            logging.info("wait_for_edge timeout occurred.")
+            print_advent_day()
     logging.debug("Left the loop!")
 
 
