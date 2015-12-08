@@ -17,9 +17,7 @@ print_width = 384
 printer_file = "/dev/usb/lp0"
 
 qr = qrcode.QRCode()
-#qr.add_data("WIFISbeteigeuze")
-#qr.add_data("Wifi:S:beteigeuze_gast:T:WPA:P:EiVuowoh4koe3baW;;")
-qr.add_data("Wifi:S:beteigeuze_gast:T:WP")
+qr.add_data("Wifi:S:beteigeuze_gast:T:WPA:P:EiVuowoh4koe3baW;;")
 qr.make(fit=True)
 image = qr.make_image(size=print_width)
 image = image.resize((print_width, print_width))
