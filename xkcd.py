@@ -108,10 +108,10 @@ def _load_from_file(path):
 def print_data(data):
     ep = printer.File(printer_file)
     ep.hw("init")
-    ep.set(align="center", type="b")
+    ep.set(align="center", text_type="b")
     ep.block_text(data.name, 16)
     ep.text("\n")
-    ep.set(align="left", type="normal")
+    ep.set(align="left", text_type="normal")
     ep.direct_image(data.getImage())
     ep.text("\n")
     ep.block_text(data.description)
