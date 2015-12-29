@@ -36,22 +36,22 @@ class xkcdDataStructure(object):
         )
 
 def load(number="", overwrite=False):
-    response = requests.get('http://xkcd.com/%s' % number)
+    response = requests.get('http://xkcd.com/{0!s}'.format(number))
     parsed_body = html.fromstring(response.text)
     meta_data = xkcdDataStructure()
     meta_data.description = parsed_body.xpath('//*[@id="comic"]//img/@title')[0].__str__()
     meta_data.name = parsed_body.xpath('//*[@id="comic"]//img/@alt')[0].__str__()
-    meta_data.image_source = "http:%s" % (parsed_body.xpath('//*[@id="comic"]//img/@src')[0])
+    meta_data.image_source = "http:{0!s}".format((parsed_body.xpath('//*[@id="comic"]//img/@src')[0]))
     meta_data.instance = os.path.split(os.path.splitext(meta_data.image_source)[0])[1]
-    meta_data.directory = "%s%s" % (cacheDir, meta_data.instance)
+    meta_data.directory = "{0!s}{1!s}".format(cacheDir, meta_data.instance)
     is_new = True
 
     if os.path.isdir(meta_data.directory) and overwrite:
-        print("Already downloaded %s, removing first..." % meta_data.instance)
+        print("Already downloaded {0!s}, removing first...".format(meta_data.instance))
         shutil.rmtree(meta_data.directory)
 
     if os.path.isdir(meta_data.directory):
-        print("Already downloaded: %s" % meta_data.instance)
+        print("Already downloaded: {0!s}".format(meta_data.instance))
         print("Using pickled variant")
         meta_data = _load_from_file(meta_data.directory)
         is_new = False
@@ -64,7 +64,7 @@ def load(number="", overwrite=False):
     return (meta_data, is_new)
 
 def _save_meta_data(data):
-    with open("%s%s%s" % (data.directory, os.sep, pickle_filename), "wb") as outfile:
+    with open("{0!s}{1!s}{2!s}".format(data.directory, os.sep, pickle_filename), "wb") as outfile:
         pickle.dump(data, outfile)
 
 def _convert_image(image, data):
@@ -86,7 +86,7 @@ def _convert_image(image, data):
 
     # Dither
     converted_image = image.convert("1", dither=Image.FLOYDSTEINBERG)
-    converted_image.save("%s%s%s" % (data.directory, os.sep, "converted.png"), "PNG")
+    converted_image.save("{0!s}{1!s}{2!s}".format(data.directory, os.sep, "converted.png"), "PNG")
     data.setImage(converted_image)
 
 def _download_image(data):
@@ -95,13 +95,13 @@ def _download_image(data):
     r = requests.get(url2retrieve)
     if not r.status_code == 200:
         i = 0
-        raise Exception("Could not retrieve image! Status code %d" % r.status_code)
+        raise Exception("Could not retrieve image! Status code {0:d}".format(r.status_code))
     raw_image = Image.open(io.BytesIO(r.content))
-    raw_image.save("%s%s%s" % (data.directory, os.sep, "image.png"), "PNG")
+    raw_image.save("{0!s}{1!s}{2!s}".format(data.directory, os.sep, "image.png"), "PNG")
     return raw_image
 
 def _load_from_file(path):
-    with open("%s%s%s" % (path, os.sep, pickle_filename), "rb") as infile:
+    with open("{0!s}{1!s}{2!s}".format(path, os.sep, pickle_filename), "rb") as infile:
         pckl = pickle.load(infile)
     return pckl
 
