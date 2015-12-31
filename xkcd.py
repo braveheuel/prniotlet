@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #
+"""Print xkcd comics through python-escpos"""
 import requests
 from lxml import html
 import argparse
@@ -8,15 +9,17 @@ import io
 from PIL import Image
 import shutil
 import pickle
-from escpos import *
+from escpos import printer
 import qrcode
 
-cacheDir=os.path.expanduser("~") + "/.cache/xkcd/"
-pickle_filename = "data.pickle"
-print_width = 384
-printer_file = "/dev/usb/lp0"
+CACHE_DIR = os.path.expanduser("~") + "/.cache/xkcd/"
+PICKLE_FILENAME = "data.pickle"
+PRINT_WIDTH = 384
+PRINTER_FILE = "/dev/usb/lp0"
 
-class xkcdDataStructure(object):
+
+class XkcdDataStructure(object):
+    """Datastructure for pickling"""
     description = None
     name = None
     image_source = None
@@ -24,26 +27,42 @@ class xkcdDataStructure(object):
     directory = None
     image = None
 
-    def getImage(self):
+    def get_image(self):
+        """Return image data
+
+        :returns: PIL image data
+        """
         if self.image:
             return Image.frombytes(**self.image)
 
-    def setImage(self, image):
+    def set_image(self, image):
+        """Set the Image data"""
         self.image = dict(
-            data = image.tobytes(),
-            size = image.size,
-            mode = image.mode
+            data=image.tobytes(),
+            size=image.size,
+            mode=image.mode
         )
 
+
 def load(number="", overwrite=False):
+    """Download a comic from website
+
+    :param number: Specified number to download. Default: empty
+    :param overwrite: Set this to re-download the a comic
+    :returns: tuple of meta_data and bolean value if new
+    """
     response = requests.get('http://xkcd.com/{0!s}'.format(number))
     parsed_body = html.fromstring(response.text)
-    meta_data = xkcdDataStructure()
-    meta_data.description = parsed_body.xpath('//*[@id="comic"]//img/@title')[0].__str__()
-    meta_data.name = parsed_body.xpath('//*[@id="comic"]//img/@alt')[0].__str__()
-    meta_data.image_source = "http:{0!s}".format((parsed_body.xpath('//*[@id="comic"]//img/@src')[0]))
-    meta_data.instance = os.path.split(os.path.splitext(meta_data.image_source)[0])[1]
-    meta_data.directory = "{0!s}{1!s}".format(cacheDir, meta_data.instance)
+    meta_data = XkcdDataStructure()
+    meta_data.description = parsed_body.xpath(
+        '//*[@id="comic"]//img/@title')[0].__str__()
+    meta_data.name = parsed_body.xpath(
+        '//*[@id="comic"]//img/@alt')[0].__str__()
+    meta_data.image_source = "http:{0!s}".format((parsed_body.xpath(
+        '//*[@id="comic"]//img/@src')[0]))
+    meta_data.instance = os.path.split(
+        os.path.splitext(meta_data.image_source)[0])[1]
+    meta_data.directory = "{0!s}{1!s}".format(CACHE_DIR, meta_data.instance)
     is_new = True
 
     if os.path.isdir(meta_data.directory) and overwrite:
@@ -64,70 +83,110 @@ def load(number="", overwrite=False):
     return (meta_data, is_new)
 
 def _save_meta_data(data):
-    with open("{0!s}{1!s}{2!s}".format(data.directory, os.sep, pickle_filename), "wb") as outfile:
+    """Save the data to a file
+
+    :param data: data to be written to file
+    """
+    with open("{0!s}{1!s}{2!s}".format(data.directory, os.sep, PICKLE_FILENAME),
+              "wb") as outfile:
         pickle.dump(data, outfile)
 
 def _convert_image(image, data):
+    """Convert specified image
+
+    :param image: Image to edit
+    :param data: data to edit
+    """
     # Rotate if width > height (always have stripe)
     if image.size[0] > image.size[1]:
         image = image.rotate(270, expand=1)
 
     # Resize
-    if image.size[0] <= 1.5*print_width:
-        ratio = float(print_width) / float(image.size[0])
+    if image.size[0] <= 1.5*PRINT_WIDTH:
+        ratio = float(PRINT_WIDTH) / float(image.size[0])
         new_height = int(float(image.size[1])*float(ratio))
-        image = image.resize((print_width, new_height))
+        image = image.resize((PRINT_WIDTH, new_height))
     else:
         # Create QR code
         qr = qrcode.QRCode()
         qr.add_data(data.image_source)
-        image = qr.make_image(size=print_width)._img
-        image = image.resize((print_width, print_width))
+        image = qr.make_image(size=PRINT_WIDTH)._img
+        image = image.resize((PRINT_WIDTH, PRINT_WIDTH))
 
     # Dither
     converted_image = image.convert("1", dither=Image.FLOYDSTEINBERG)
-    converted_image.save("{0!s}{1!s}{2!s}".format(data.directory, os.sep, "converted.png"), "PNG")
-    data.setImage(converted_image)
+    converted_image.save("{0!s}{1!s}{2!s}".format(data.directory, os.sep,
+                                                  "converted.png"), "PNG")
+    data.set_image(converted_image)
 
 def _download_image(data):
+    """Retrieve image
+
+    :param data: Specified data to download
+    :returns: Downloaded image
+    :raises Exception: Raised if request can't be done.
+    """
     print("Downloading image...")
     url2retrieve = data.image_source
-    r = requests.get(url2retrieve)
-    if not r.status_code == 200:
-        i = 0
-        raise Exception("Could not retrieve image! Status code {0:d}".format(r.status_code))
-    raw_image = Image.open(io.BytesIO(r.content))
-    raw_image.save("{0!s}{1!s}{2!s}".format(data.directory, os.sep, "image.png"), "PNG")
+    requested = requests.get(url2retrieve)
+    if not requested.status_code == 200:
+        raise Exception("Could not retrieve image! Status code {0:d}".format(
+            requested.status_code))
+    raw_image = Image.open(io.BytesIO(requested.content))
+    raw_image.save("{0!s}{1!s}{2!s}".
+                   format(data.directory, os.sep, "image.png"), "PNG")
     return raw_image
 
+
 def _load_from_file(path):
-    with open("{0!s}{1!s}{2!s}".format(path, os.sep, pickle_filename), "rb") as infile:
+    """Load pickeled data from file
+
+    :param path: Filename to load from
+    :returns: Data retrieved from pickle file
+    """
+    with open("{0!s}{1!s}{2!s}".format(path, os.sep,
+                                       PICKLE_FILENAME), "rb") as infile:
         pckl = pickle.load(infile)
     return pckl
 
+
 def print_data(data):
-    ep = printer.File(printer_file)
-    ep.hw("init")
-    ep.set(align="center", text_type="b")
-    ep.block_text(data.name, 16)
-    ep.text("\n")
-    ep.set(align="left", text_type="normal")
-    ep.direct_image(data.getImage())
-    ep.text("\n")
-    ep.block_text(data.description)
-    ep.text("\n\n\n\n")
+    """Print the specified data
+
+    :param data: Data to print
+    """
+    escpos_printer = printer.File(PRINTER_FILE)
+    escpos_printer.hw("init")
+    escpos_printer.set(align="center", text_type="b")
+    escpos_printer.block_text(data.name, 16)
+    escpos_printer.text("\n")
+    escpos_printer.set(align="left", text_type="normal")
+    escpos_printer.direct_image(data.get_image())
+    escpos_printer.text("\n")
+    escpos_printer.block_text(data.description)
+    escpos_printer.text("\n\n\n\n")
+
 
 if __name__ == "__main__":
-    if not os.path.exists(cacheDir):
-        os.makedirs(cacheDir)
-    parser = argparse.ArgumentParser(description='Load image and description of xkcd')
-    parser.add_argument('comic_number', metavar="number", type=str, help="Number of comic to load", default="", nargs="*")
-    parser.add_argument('-f', '--overwrite', action='store_true', help="Overwrite if already exists")
-    parser.add_argument('-p', '--print_if_new', action='store_true', help="Print only if new")
+    if not os.path.exists(CACHE_DIR):
+        os.makedirs(CACHE_DIR)
+    parser = argparse.ArgumentParser(
+        description='Load image and description of xkcd')
+    parser.add_argument('comic_number',
+                        metavar="number",
+                        type=str,
+                        help="Number of comic to load",
+                        default="", nargs="*")
+    parser.add_argument('-f', '--overwrite',
+                        action='store_true',
+                        help="Overwrite if already exists")
+    parser.add_argument('-p', '--print_if_new',
+                        action='store_true',
+                        help="Print only if new")
     args = parser.parse_args()
-    (data, new_comic) = load("" if args.comic_number == "" else args.comic_number[0], args.overwrite)
+    (data, new_comic) = load("" if args.comic_number == ""
+                             else args.comic_number[0], args.overwrite)
     if (new_comic and args.print_if_new) or not args.print_if_new:
         print_data(data)
     else:
         print("Not printing, because of argument print_if_new")
-
