@@ -62,7 +62,7 @@ def load(number="", overwrite=False):
         '//*[@id="comic"]//img/@src')[0]))
     meta_data.instance = os.path.split(
         os.path.splitext(meta_data.image_source)[0])[1]
-    meta_data.directory = "{0!s}{1!s}".format(cacheDir, meta_data.instance)
+    meta_data.directory = "{0!s}{1!s}".format(CACHE_DIR, meta_data.instance)
     is_new = True
 
     if os.path.isdir(meta_data.directory) and overwrite:
@@ -87,7 +87,7 @@ def _save_meta_data(data):
 
     :param data: data to be written to file
     """
-    with open("{0!s}{1!s}{2!s}".format(data.directory, os.sep, pickle_filename),
+    with open("{0!s}{1!s}{2!s}".format(data.directory, os.sep, PICKLE_FILENAME),
               "wb") as outfile:
         pickle.dump(data, outfile)
 
@@ -117,7 +117,7 @@ def _convert_image(image, data):
     converted_image = image.convert("1", dither=Image.FLOYDSTEINBERG)
     converted_image.save("{0!s}{1!s}{2!s}".format(data.directory, os.sep,
                                                   "converted.png"), "PNG")
-    data.setImage(converted_image)
+    data.set_image(converted_image)
 
 def _download_image(data):
     """Retrieve image
@@ -144,8 +144,8 @@ def _load_from_file(path):
     :param path: Filename to load from
     :returns: Data retrieved from pickle file
     """
-    with open("{0!s}{1!s}{2!s}".format(path, os.sep, pickle_filename), "rb")
-    as infile:
+    with open("{0!s}{1!s}{2!s}".format(path, os.sep,
+                                       PICKLE_FILENAME), "rb") as infile:
         pckl = pickle.load(infile)
     return pckl
 
