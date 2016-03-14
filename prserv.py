@@ -2,25 +2,24 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
-# Copyright © 2015 ch <ch@silversurfer.deepspace.local>
+# Copyright © 2015 Christoph Heuel <mail@christoph-heuel.net>
 #
 # Distributed under terms of the MIT license.
 
 """
 Printserver for thermoprinter
 """
-from escpos import *
-import zerorpc
+from escpos import printer
+import msgpackrpc
 
-class IOTPrinterServer(printer.file):
+class IOTPrinterServer(printer.File):
     """Printer Server for the escpos."""
 
     def __init__(self, printer_file, columns=32):
         super().__init__(printer_file, columns)
 
 
-
 if __name__ == "__main__":
-    srv = zerorpc.Server(IOTPrinterServer("/dev/usb/lp0"))
-    srv.bind("tcp://0.0.0.0:4242")
-    srv.run()
+    server = msgpackrpc.Server(IOTPrinterServer("/dev/usb/lp0"))
+    server.listen(msgpackrpc.Address("0.0.0.0", 4242))
+    server.start()
