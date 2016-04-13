@@ -72,7 +72,7 @@ def print_day(advent_day):
     """
     logging.info("Starting with advent day %s", advent_day)
     img = Image.open("{0}/{1}.png".format(DOCUMENT_ROOT, advent_day))
-    ESCPOS_PRINTER.direct_image(img)
+    ESCPOS_PRINTER.image(img)
     ESCPOS_PRINTER.text("\n")
     ESCPOS_PRINTER.flush()
     logging.info("Printing image done.")

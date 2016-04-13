@@ -161,7 +161,7 @@ def print_data(data):
     escpos_printer.block_text(data.name, 16)
     escpos_printer.text("\n")
     escpos_printer.set(align="left", text_type="normal")
-    escpos_printer.direct_image(data.get_image())
+    escpos_printer.image(data.get_image())
     escpos_printer.text("\n")
     escpos_printer.block_text(data.description)
     escpos_printer.text("\n\n\n\n")
