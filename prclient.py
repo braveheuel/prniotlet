@@ -9,7 +9,12 @@
 """
 
 """
-import msgpackrpc
+from mprpc import RPCClient
 
-client = msgpackrpc.Client(msgpackrpc.Address("raspberrypi", 4242))
-client.call("text", "asdasdsa")
+
+client = RPCClient('raspberrypi', 4242)
+client.call('hw', b"INIT")
+client.call('text', b"blaaa ")
+client.call('text', b"blaaa")
+client.call('text', b"\n")
+client.call('flush')

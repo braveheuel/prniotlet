@@ -10,16 +10,14 @@
 Printserver for thermoprinter
 """
 from escpos import printer
-import msgpackrpc
+from gevent.server import StreamServer
+from mprpc import RPCServer
 
-class IOTPrinterServer(printer.File):
+
+class IOTPrinterServer(RPCServer, printer.File):
     """Printer Server for the escpos."""
-
-    def __init__(self, printer_file, columns=32):
-        super().__init__(printer_file, columns)
-
+    pass
 
 if __name__ == "__main__":
-    server = msgpackrpc.Server(IOTPrinterServer("/dev/usb/lp0"))
-    server.listen(msgpackrpc.Address("0.0.0.0", 4242))
-    server.start()
+    server = StreamServer(('0.0.0.0', 4242), IOTPrinterServer())
+    server.serve_forever()
