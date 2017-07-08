@@ -155,17 +155,18 @@ def print_data(data):
 
     :param data: Data to print
     """
-    escpos_printer = printer.File(PRINTER_FILE)
+    escpos_printer = printer.Dummy()
     escpos_printer.hw("init")
-    escpos_printer.set(align="center", text_type="b")
-    escpos_printer.block_text(data.name, 16)
+    escpos_printer.set(align="center", bold=True)
+    escpos_printer.block_text(data.name, columns=16)
     escpos_printer.text("\n")
-    escpos_printer.set(align="left", text_type="normal")
+    escpos_printer.set(align="left", bold=False)
     escpos_printer.image(data.get_image())
     escpos_printer.text("\n")
-    escpos_printer.block_text(data.description)
-    escpos_printer.text("\n\n\n\n")
-
+    escpos_printer.block_text(data.description, columns=32)
+    escpos_printer.print_and_feed(4)
+    escpos_printer_real = printer.Usb(0x0416, 0x5011, in_ep=0x81, out_ep=0x02)
+    escpos_printer_real._raw(escpos_printer.output)
 
 if __name__ == "__main__":
     if not os.path.exists(CACHE_DIR):
