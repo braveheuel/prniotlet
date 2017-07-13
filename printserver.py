@@ -50,6 +50,7 @@ class ESCPOSServer(printer.Dummy):
         if session_id == ESCPOSServer.active_session:
             print("Closing Session ", ESCPOSServer.active_session)
             ESCPOSServer.active_session = None
+            self._output_list.clear()
         else:
             print("Wrong Session:", session_id, "Active One:",
                   ESCPOSServer.active_session)
@@ -76,6 +77,7 @@ class ESCPOSServer(printer.Dummy):
         if session_id == ESCPOSServer.active_session:
             print("Printing...")
             ESCPOSServer.printer_real._raw(self.output)
+            self._output_list.clear()
         else:
             print("Wrong Session:", session_id, "Active One:",
                   ESCPOSServer.active_session)
