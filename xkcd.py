@@ -11,11 +11,12 @@ import shutil
 import pickle
 from escpos import printer
 import qrcode
+import asyncio
+import aiomas
 
 CACHE_DIR = os.path.expanduser("~") + "/.cache/xkcd/"
 PICKLE_FILENAME = "data.pickle"
 PRINT_WIDTH = 384
-PRINTER_FILE = "/dev/usb/lp0"
 
 
 class XkcdDataStructure(object):
@@ -149,6 +150,18 @@ def _load_from_file(path):
         pckl = pickle.load(infile)
     return pckl
 
+@asyncio.coroutine
+def _final_print(data):
+    rpc_con = yield from aiomas.rpc.open_connection(('raspberrypi', 5555), codec=aiomas.MsgPack)
+    try:
+        session = yield from rpc_con.remote.start_session()
+        yield from rpc_con.remote.raw_data(session, data)
+        yield from rpc_con.remote.final_print(session)
+    except Exception as e:
+        print("Error occurred!", e)
+    finally:
+        yield from rpc_con.remote.close_session(session)
+        yield from rpc_con.close()
 
 def print_data(data):
     """Print the specified data
@@ -165,8 +178,8 @@ def print_data(data):
     escpos_printer.text("\n")
     escpos_printer.block_text(data.description, columns=32)
     escpos_printer.print_and_feed(4)
-    escpos_printer_real = printer.Usb(0x0416, 0x5011, in_ep=0x81, out_ep=0x02)
-    escpos_printer_real._raw(escpos_printer.output)
+    aiomas.run(_final_print(escpos_printer.output))
+
 
 if __name__ == "__main__":
     if not os.path.exists(CACHE_DIR):
