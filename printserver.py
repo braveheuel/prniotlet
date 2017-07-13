@@ -62,7 +62,7 @@ class ESCPOSServer(printer.Dummy):
         """
         if session_id == ESCPOSServer.active_session:
             print("Receiving Raw Data")
-            super()._raw(msg.encode())
+            super()._raw(msg)
         else:
             print("Wrong Session:", session_id, "Active One:",
                   ESCPOSServer.active_session)
@@ -84,5 +84,5 @@ class ESCPOSServer(printer.Dummy):
 
 if __name__ == "__main__":
     server = aiomas.run(aiomas.rpc.start_server(('0.0.0.0', 5555),
-                                                ESCPOSServer()))
+                                                ESCPOSServer(), codec=aiomas.codecs.MsgPack))
     aiomas.run(server.wait_closed())
