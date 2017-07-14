@@ -1,0 +1,9 @@
+[Unit]
+Description=Python ESCPOS Server
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/prniolet-server
+
+[Install]
+WantedBy=multi-user.target
