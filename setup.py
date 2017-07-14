@@ -7,5 +7,5 @@ setup(
     author="Christoph Heuel",
     author_email="christoph@heuel-web.de",
     license="MIT",
-    packages=['prniolet'],
+    scripts=['scripts/prniolet-server', 'scripts/prniolet-xkcd'],
 )
