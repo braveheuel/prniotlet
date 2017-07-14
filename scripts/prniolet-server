@@ -12,6 +12,7 @@ aimoas print server
 from escpos import printer, config
 import aiomas
 import uuid
+import time
 
 
 class SessionException(Exception):
@@ -19,6 +20,41 @@ class SessionException(Exception):
     Exception Class showing another that an other session is active/in use
     """
     pass
+
+
+class PrnIOLetSession(object):
+    """
+    Class for Session Objects
+    """
+
+    def __init__(self):
+        self._session_string = uuid.uuid4().__str__()
+        self._timestamp = time.time()
+
+    def is_active(self):
+        """
+        Returns if a session is active. This means, that the delta is smaller
+        than 180 secs
+        """
+        return ((time.time() - self._timestamp) <= 3*60)
+
+    def is_same(self, session_id):
+        """
+        Compare session string with internal
+        """
+        return self._session_string == session_id
+
+    def update(self):
+        """
+        Update timestamp
+        """
+        self._timestamp = time.time()
+
+    def __str__(self):
+        """
+        Return Session String
+        """
+        return self._session_string
 
 
 class ESCPOSServer(printer.Dummy):
@@ -36,7 +72,12 @@ class ESCPOSServer(printer.Dummy):
         requests can be done
         """
         if not ESCPOSServer.active_session:
-            ESCPOSServer.active_session = uuid.uuid4().__str__()
+            ESCPOSServer.active_session = PrnIOLetSession()
+            print("Starting Session ", ESCPOSServer.active_session)
+            return ESCPOSServer.active_session
+        elif not ESCPOSServer.active_session.is_active():
+            print("Session expired ", ESCPOSServer.active_session)
+            ESCPOSServer.active_session = PrnIOLetSession()
             print("Starting Session ", ESCPOSServer.active_session)
             return ESCPOSServer.active_session
         else:
@@ -47,7 +88,7 @@ class ESCPOSServer(printer.Dummy):
         """
         Close a existing session
         """
-        if session_id == ESCPOSServer.active_session:
+        if ESCPOSServer.active_session.is_same(session_id) or not ESCPOSServer.active_session.is_active():
             print("Closing Session ", ESCPOSServer.active_session)
             ESCPOSServer.active_session = None
             self._output_list.clear()
@@ -61,9 +102,10 @@ class ESCPOSServer(printer.Dummy):
         """
         Print raw data to the Dummy Device
         """
-        if session_id == ESCPOSServer.active_session:
+        if ESCPOSServer.active_session.is_same(session_id):
             print("Receiving Raw Data")
             super()._raw(msg)
+            ESCPOSServer.active_session.update()
         else:
             print("Wrong Session:", session_id, "Active One:",
                   ESCPOSServer.active_session)
@@ -74,10 +116,11 @@ class ESCPOSServer(printer.Dummy):
         """
         Print to the actual server
         """
-        if session_id == ESCPOSServer.active_session:
+        if ESCPOSServer.active_session.is_same(session_id):
             print("Printing...")
             ESCPOSServer.printer_real._raw(self.output)
             self._output_list.clear()
+            ESCPOSServer.active_session.update()
         else:
             print("Wrong Session:", session_id, "Active One:",
                   ESCPOSServer.active_session)
@@ -86,5 +129,6 @@ class ESCPOSServer(printer.Dummy):
 
 if __name__ == "__main__":
     server = aiomas.run(aiomas.rpc.start_server(('0.0.0.0', 5555),
-                                                ESCPOSServer(), codec=aiomas.codecs.MsgPack))
+                                                ESCPOSServer(),
+                                                codec=aiomas.codecs.MsgPack))
     aiomas.run(server.wait_closed())
