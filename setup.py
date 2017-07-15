@@ -7,5 +7,6 @@ setup(
     author="Christoph Heuel",
     author_email="christoph@heuel-web.de",
     license="MIT",
+    install_requires=['escpos', 'aiomas'],
     scripts=['scripts/prniolet-server', 'scripts/prniolet-xkcd'],
 )
