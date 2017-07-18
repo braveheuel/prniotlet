@@ -74,12 +74,12 @@ class ESCPOSServer(printer.Dummy):
         if not ESCPOSServer.active_session:
             ESCPOSServer.active_session = PrnIOLetSession()
             print("Starting Session ", ESCPOSServer.active_session)
-            return ESCPOSServer.active_session
+            return str(ESCPOSServer.active_session)
         elif not ESCPOSServer.active_session.is_active():
             print("Session expired ", ESCPOSServer.active_session)
             ESCPOSServer.active_session = PrnIOLetSession()
             print("Starting Session ", ESCPOSServer.active_session)
-            return ESCPOSServer.active_session
+            return str(ESCPOSServer.active_session)
         else:
             raise SessionException("Another Session is active")
 
