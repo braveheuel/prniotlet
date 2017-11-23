@@ -16,20 +16,20 @@ from PIL import Image
 import pigpio
 import logging
 from datetime import date
-from docopt import docopt
 import pathlib
+import click
+import aiomas
+import asyncio
 
 PRINT_WIDTH = 384
-PRINTER_FILE = "/dev/usb/lp0"
 DOCUMENT_ROOT = "/home/ch/Dokumente/advent"
 TASTER = 4
 
-START_DATE = date(2015, 12, 1)
-END_DATE = date(2015, 12, 24)
+START_DATE = date(2017, 12, 1)
+END_DATE = date(2017, 12, 24)
+ESCPOS_PRINTER = printer.Dummy()
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
-
-ESCPOS_PRINTER = printer.File(PRINTER_FILE)
 
 def umlaut_to_ASCII(text):
     """Replace umlaut with ascii compliant chars
@@ -46,7 +46,6 @@ def umlaut_to_ASCII(text):
     text = text.replace('ß', "ss")
     return text
 
-
 def print_advent_day():
     """Evaluate if print date is in date range"""
     if date.today() < START_DATE:
@@ -54,15 +53,14 @@ def print_advent_day():
         ESCPOS_PRINTER.hw("init")
         ESCPOS_PRINTER.text("\nZu frueh gedrueckt!")
         ESCPOS_PRINTER.text("\n\n\n\n")
-        ESCPOS_PRINTER.flush()
     elif date.today() > END_DATE:
         logging.info("Too late!")
         ESCPOS_PRINTER.hw("init")
         ESCPOS_PRINTER.text("\nZu spaet gedrueckt!")
         ESCPOS_PRINTER.text("\n\n\n\n")
-        ESCPOS_PRINTER.flush()
     else:
         print_day(date.today().day)
+    aiomas.run(_final_print())
 
 
 def print_day(advent_day):
@@ -74,8 +72,6 @@ def print_day(advent_day):
     img = Image.open("{0}/{1}.png".format(DOCUMENT_ROOT, advent_day))
     ESCPOS_PRINTER.image(img)
     ESCPOS_PRINTER.text("\n")
-    ESCPOS_PRINTER.flush()
-    logging.info("Printing image done.")
     filename = "{0}/{1}.txt".format(DOCUMENT_ROOT, advent_day)
     if pathlib.Path(filename).exists():
         text_file = open(filename, 'r')
@@ -94,10 +90,24 @@ def print_day(advent_day):
 
     ESCPOS_PRINTER.text("\n\n\n\n")
     logging.info("Printing done.")
-    ESCPOS_PRINTER.flush()
 
+@asyncio.coroutine
+def _final_print():
+    rpc_con = yield from aiomas.rpc.open_connection(('raspberrypi', 5555), codec=aiomas.MsgPack)
+    try:
+        session = yield from rpc_con.remote.start_session()
+        yield from rpc_con.remote.raw_data(session, ESCPOS_PRINTER.output)
+        yield from rpc_con.remote.final_print(session)
+        del ESCPOS_PRINTER._output_list[:]
+    except Exception as e:
+        print("Error occurred!", e)
+    finally:
+        yield from rpc_con.remote.close_session(session)
+        yield from rpc_con.close()
 
-def main(args):
+@click.command()
+@click.argument("day", nargs=-1)
+def main(day):
     """Main Function
 
     :param args: Arguments found by docopt
@@ -106,8 +116,8 @@ def main(args):
     pi_instance = pigpio.pi()
     pi_instance.set_mode(TASTER, pigpio.INPUT)
 
-    if args['<day>']:
-        print_day(args["<day>"])
+    if day:
+        print_day(day)
     else:
         logging.info("Going into loop...")
         while True:
@@ -118,5 +128,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    arguments = docopt(__doc__)
-    main(arguments)
+    main()
