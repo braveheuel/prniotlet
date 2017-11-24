@@ -68,10 +68,15 @@ def print_day(advent_day):
     :param advent_day: Number of date to print
     """
     logging.info("Starting with advent day %s", advent_day)
-    img = Image.open("{0}/{1}.png".format(DOCUMENT_ROOT, advent_day))
+    img = Image.open("{0}/{1}/{2}.png".format(
+            DOCUMENT_ROOT, date.today().year, advent_day
+        )
+    )
     ESCPOS_PRINTER.image(img)
     ESCPOS_PRINTER.text("\n")
-    filename = "{0}/{1}.txt".format(DOCUMENT_ROOT, advent_day)
+    filename = "{0}/{1}/{2}.txt".format(
+        DOCUMENT_ROOT, date.today().year, advent_day
+    )
     if pathlib.Path(filename).exists():
         text_file = open(filename, 'r')
         logging.info("Reading text...")
