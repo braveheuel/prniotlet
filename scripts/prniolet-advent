@@ -85,7 +85,9 @@ def print_day(advent_day):
             if i == "\n":
                 ESCPOS_PRINTER.text("\n")
             else:
-                ESCPOS_PRINTER.block_text(umlaut_to_ASCII(i))
+                ESCPOS_PRINTER.block_text(
+                    umlaut_to_ASCII(i), font='a', columns=32
+                )
                 ESCPOS_PRINTER.text("\n")
         text_file.close()
         logging.info("Printing text done.")
