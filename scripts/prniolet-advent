@@ -13,7 +13,6 @@ Usage:
 """
 from escpos import printer
 from PIL import Image
-import pigpio
 import logging
 from datetime import date
 import pathlib
@@ -106,19 +105,20 @@ def _final_print():
         yield from rpc_con.close()
 
 @click.command()
-@click.argument("day", nargs=-1)
+@click.argument("day")
 def main(day):
     """Main Function
 
     :param args: Arguments found by docopt
     """
     logging.info("Starting...")
-    pi_instance = pigpio.pi()
-    pi_instance.set_mode(TASTER, pigpio.INPUT)
 
     if day:
         print_day(day)
     else:
+        import pigpio
+        pi_instance = pigpio.pi()
+        pi_instance.set_mode(TASTER, pigpio.INPUT)
         logging.info("Going into loop...")
         while True:
             if pi_instance.wait_for_edge(TASTER):
