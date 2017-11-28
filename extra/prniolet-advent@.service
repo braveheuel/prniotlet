@@ -1,9 +1,10 @@
 [Unit]
-Description=Advent Service Listening on GPIO Key
+Description=Advent Service Listening on GPIO Key for User %i
 Wants=prniolet-server.service
 
 [Service]
 Type=simple
+User=%i
 ExecStart=/usr/local/bin/prniolet-advent
 
 [Install]
