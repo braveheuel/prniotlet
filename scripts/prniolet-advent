@@ -112,7 +112,7 @@ def _final_print():
         yield from rpc_con.close()
 
 @click.command()
-@click.argument("day")
+@click.option("--day")
 def main(day):
     """Main Function
 
