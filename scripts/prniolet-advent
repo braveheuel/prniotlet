@@ -28,7 +28,7 @@ START_DATE = date(2017, 12, 1)
 END_DATE = date(2017, 12, 24)
 ESCPOS_PRINTER = printer.Dummy()
 
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(message)s', level=logging.INFO)
 
 def umlaut_to_ASCII(text):
     """Replace umlaut with ascii compliant chars
