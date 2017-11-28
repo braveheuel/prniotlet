@@ -95,6 +95,7 @@ def print_day(advent_day):
         logging.info("No text found!")
 
     ESCPOS_PRINTER.text("\n\n\n\n")
+    aiomas.run(_final_print())
     logging.info("Printing done.")
 
 @asyncio.coroutine
