@@ -19,9 +19,12 @@ import pathlib
 import click
 import aiomas
 import asyncio
+import os
+import pickle
 
 PRINT_WIDTH = 384
 DOCUMENT_ROOT = "/home/ch/Dokumente/advent"
+PICKLE_FILE = os.path.join(DOCUMENT_ROOT, ".days.pckl")
 TASTER = 4
 
 START_DATE = date(2017, 12, 1)
@@ -29,6 +32,35 @@ END_DATE = date(2017, 12, 24)
 ESCPOS_PRINTER = printer.Dummy()
 
 logging.basicConfig(format='%(message)s', level=logging.INFO)
+
+def load_daylog():
+    """Loads pickled day data from file"""
+    returnval = {}
+    if os.path.isfile(PICKLE_FILE):
+        try:
+            with open(PICKLE_FILE, "rb") as pf:
+                returnval = pickle.load(pf)
+        except:
+            logging.warning("Could not load pickle file, starting empty!")
+            returnval = {}
+    return returnval
+
+def save_daylog(daylog):
+    """Save the daylog"""
+    with open(PICKLE_FILE, "wb") as pf:
+        pickle.dump(daylog, pf)
+
+def daycount(daylog):
+    if date.today() in daylog:
+        return daylog[date.today()]
+    return 0
+
+def inc_day(daylog):
+    """Increase the Daycount by one.
+
+    If the day is not contained, it will be one"""
+    daylog[date.today()] = daycount(daylog) + 1
+    save_daylog(daylog)
 
 def umlaut_to_ASCII(text):
     """Replace umlaut with ascii compliant chars
@@ -45,7 +77,7 @@ def umlaut_to_ASCII(text):
     text = text.replace('ß', "ss")
     return text
 
-def print_advent_day():
+def print_advent_day(daylog):
     """Evaluate if print date is in date range"""
     if date.today() < START_DATE:
         logging.info("Too early!")
@@ -57,10 +89,17 @@ def print_advent_day():
         ESCPOS_PRINTER.hw("init")
         ESCPOS_PRINTER.text("\nZu spaet gedrueckt!")
         ESCPOS_PRINTER.text("\n\n\n\n")
+    elif daycount(daylog) > 0:
+        counter = daycount(daylog)
+        logging.info("Button pressed already: %d", counter)
+        ESCPOS_PRINTER.hw("init")
+        ESCPOS_PRINTER.text("\nTaste schon {0} mal gedrueckt!".format(counter))
+        ESCPOS_PRINTER.text("\n\n\n\n")
+        inc_day(daylog)
     else:
         print_day(date.today().day)
+        inc_day(daylog)
     aiomas.run(_final_print())
-
 
 def print_day(advent_day):
     """Print specified day
@@ -124,6 +163,7 @@ def main(day):
         print_day(day)
         aiomas.run(_final_print())
     else:
+        daylog = load_daylog()
         import pigpio
         pi_instance = pigpio.pi()
         pi_instance.set_mode(TASTER, pigpio.INPUT)
@@ -131,7 +171,7 @@ def main(day):
         while True:
             if pi_instance.wait_for_edge(TASTER):
                 logging.info("Taster was pressed!")
-                print_advent_day()
+                print_advent_day(daylog)
         logging.debug("Left the loop!")
 
 
