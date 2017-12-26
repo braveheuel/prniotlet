@@ -2,11 +2,14 @@
 from setuptools import setup
 
 setup(
-    name="prniolet",
-    version="0.0.3",
+    name="prniotlet",
+    version="0.1.0",
     author="Christoph Heuel",
     author_email="christoph@heuel-web.de",
     license="MIT",
     install_requires=['python-escpos', 'aiomas[mp]', 'click'],
-    scripts=['scripts/prniolet-server', 'scripts/prniolet-xkcd'],
+    scripts=[
+        'scripts/prniotlet-server', 'scripts/prniotlet-xkcd',
+        'scripts/prniotlet-wlan', 'scripts/prniotlet-advent'
+    ],
 )

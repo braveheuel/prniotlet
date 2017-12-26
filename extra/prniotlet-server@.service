@@ -3,7 +3,7 @@ Description=Python ESCPOS Server
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/prniolet-server
+ExecStart=/usr/local/bin/prniotlet-server
 
 [Install]
 WantedBy=multi-user.target
