@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+#
+"""Print Text through python-escpos"""
+from escpos import printer
+import click
+import aiomas
+import asyncio
+
+
+@asyncio.coroutine
+def _final_print(data):
+    rpc_con = yield from aiomas.rpc.open_connection(('raspberrypi', 5555), codec=aiomas.MsgPack)
+    try:
+        session = yield from rpc_con.remote.start_session()
+        yield from rpc_con.remote.raw_data(session, data)
+        yield from rpc_con.remote.final_print(session)
+    except Exception as e:
+        print("Error occurred!", e)
+    finally:
+        yield from rpc_con.remote.close_session(session)
+        yield from rpc_con.close()
+
+
+@click.command()
+@click.option("--caption", required=False)
+@click.option("--text", required=True)
+def print_data(text, caption=None):
+    """Print the specified data
+
+    :param caption: Title
+    :param text: Text to print
+    """
+    escpos_printer = printer.Dummy()
+    escpos_printer.hw("init")
+    if caption:
+        escpos_printer.set(align="center", bold=True, width=2, height=2)
+        escpos_printer.block_text(caption, columns=16)
+        escpos_printer.print_and_feed(1)
+    escpos_printer.print_and_feed()
+    escpos_printer.set(align="center", bold=False, width=1, height=1)
+    escpos_printer.block_text(text, font='a', columns=16)
+    escpos_printer.print_and_feed(4)
+    aiomas.run(_final_print(escpos_printer.output))
+
+
+if __name__ == "__main__":
+    print_data()

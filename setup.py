@@ -10,6 +10,7 @@ setup(
     install_requires=['python-escpos', 'aiomas[mp]', 'click'],
     scripts=[
         'scripts/prniotlet-server', 'scripts/prniotlet-xkcd',
-        'scripts/prniotlet-wlan', 'scripts/prniotlet-advent'
+        'scripts/prniotlet-wlan', 'scripts/prniotlet-advent',
+        'scripts/prniotlet-text',
     ],
 )
