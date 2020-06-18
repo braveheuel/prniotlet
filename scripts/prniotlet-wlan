@@ -10,18 +10,17 @@ import asyncio
 def wlanQR_prn(prn, ssid, security):
     prn.qr("WIFI:S:{0}:T:WPA:P:{1};;".format(ssid, security), size=12)
 
-@asyncio.coroutine
-def _final_print(data):
-    rpc_con = yield from aiomas.rpc.open_connection(('raspberrypi', 5555), codec=aiomas.MsgPack)
+async def _final_print(data):
+    rpc_con = await aiomas.rpc.open_connection(('raspberrypi', 5555), codec=aiomas.MsgPack)
     try:
-        session = yield from rpc_con.remote.start_session()
-        yield from rpc_con.remote.raw_data(session, data)
-        yield from rpc_con.remote.final_print(session)
+        session = await rpc_con.remote.start_session()
+        await rpc_con.remote.raw_data(session, data)
+        await rpc_con.remote.final_print(session)
     except Exception as e:
         print("Error occurred!", e)
     finally:
-        yield from rpc_con.remote.close_session(session)
-        yield from rpc_con.close()
+        await rpc_con.remote.close_session(session)
+        await rpc_con.close()
 
 
 @click.command()
