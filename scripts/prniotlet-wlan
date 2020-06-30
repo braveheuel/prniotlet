@@ -3,24 +3,12 @@
 """Print QR-Code for WLAN through python-escpos"""
 from escpos import printer
 import click
-import aiomas
 import asyncio
+import prniotlet
 
 
 def wlanQR_prn(prn, ssid, security):
-    prn.qr("WIFI:S:{0}:T:WPA:P:{1};;".format(ssid, security), size=12)
-
-async def _final_print(data):
-    rpc_con = await aiomas.rpc.open_connection(('raspberrypi', 5555), codec=aiomas.MsgPack)
-    try:
-        session = await rpc_con.remote.start_session()
-        await rpc_con.remote.raw_data(session, data)
-        await rpc_con.remote.final_print(session)
-    except Exception as e:
-        print("Error occurred!", e)
-    finally:
-        await rpc_con.remote.close_session(session)
-        await rpc_con.close()
+    prn.proxy.qr("WIFI:S:{0}:T:WPA:P:{1};;".format(ssid, security), size=12)
 
 
 @click.command()
@@ -32,18 +20,18 @@ def print_data(ssid, security):
     :param ssid: SSID of the WLAN
     :param security: Security of that WLAN
     """
-    escpos_printer = printer.Dummy()
-    escpos_printer.hw("init")
-    escpos_printer.set(align="center", bold=True, width=2, height=2)
-    escpos_printer.block_text(ssid, columns=16)
-    escpos_printer.print_and_feed(1)
+    escpos_printer = prniotlet.PrnIOTlet()
+    escpos_printer.proxy.hw("init")
+    escpos_printer.proxy.set(align="center", bold=True, width=2, height=2)
+    escpos_printer.proxy.block_text(ssid, columns=16)
+    escpos_printer.proxy.print_and_feed(1)
     wlanQR_prn(escpos_printer, ssid, security)
-    escpos_printer.print_and_feed()
-    escpos_printer.set(align="center", bold=False, width=1, height=1)
-    escpos_printer.text("Key:\n")
-    escpos_printer.block_text(security, font='a', columns=16)
-    escpos_printer.print_and_feed(4)
-    aiomas.run(_final_print(escpos_printer.output))
+    escpos_printer.proxy.print_and_feed()
+    escpos_printer.proxy.set(align="center", bold=False, width=1, height=1)
+    escpos_printer.proxy.text("Key:\n")
+    escpos_printer.proxy.block_text(security, font='a', columns=16)
+    escpos_printer.proxy.print_and_feed(4)
+    escpos_printer.final_print()
 
 
 if __name__ == "__main__":

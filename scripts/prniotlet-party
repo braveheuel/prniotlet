@@ -14,6 +14,7 @@ from PIL import Image
 import subprocess
 import pigpio
 import logging
+import prniotlet
 
 print_width = 384
 printer_file = "/dev/usb/lp0"

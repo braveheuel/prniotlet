@@ -9,10 +9,9 @@ import io
 from PIL import Image
 import shutil
 import pickle
-from escpos import printer
 import qrcode
 import asyncio
-import aiomas
+import prniotlet
 
 CACHE_DIR = os.path.expanduser("~") + "/.cache/xkcd/"
 PICKLE_FILENAME = "data.pickle"
@@ -150,34 +149,22 @@ def _load_from_file(path):
         pckl = pickle.load(infile)
     return pckl
 
-async def _final_print(data):
-    rpc_con = await aiomas.rpc.open_connection(('raspberrypi', 5555), codec=aiomas.MsgPack)
-    try:
-        session = await rpc_con.remote.start_session()
-        await rpc_con.remote.raw_data(session, data)
-        await rpc_con.remote.final_print(session)
-    except Exception as e:
-        print("Error occurred!", e)
-    finally:
-        await rpc_con.remote.close_session(session)
-        await rpc_con.close()
-
 def print_data(data):
     """Print the specified data
 
     :param data: Data to print
     """
-    escpos_printer = printer.Dummy()
-    escpos_printer.hw("init")
-    escpos_printer.set(align="center", bold=True)
-    escpos_printer.block_text(data.name, columns=16)
-    escpos_printer.text("\n")
-    escpos_printer.set(align="left", bold=False)
-    escpos_printer.image(data.get_image())
-    escpos_printer.text("\n")
-    escpos_printer.block_text(data.description, columns=32)
-    escpos_printer.print_and_feed(4)
-    aiomas.run(_final_print(escpos_printer.output))
+    escpos_printer = prniotlet.PrnIOTlet()
+    escpos_printer.proxy.hw("init")
+    escpos_printer.proxy.set(align="center", bold=True)
+    escpos_printer.proxy.block_text(data.name, columns=16)
+    escpos_printer.proxy.text("\n")
+    escpos_printer.proxy.set(align="left", bold=False)
+    escpos_printer.proxy.image(data.get_image())
+    escpos_printer.proxy.text("\n")
+    escpos_printer.proxy.block_text(data.description, columns=32)
+    escpos_printer.proxy.print_and_feed(4)
+    escpos_printer.final_print()
 
 
 if __name__ == "__main__":
