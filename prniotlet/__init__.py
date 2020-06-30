@@ -15,7 +15,7 @@ class PrnIOTlet:
         else:
             self.config.read(os.path.join(BaseDirectory.xdg_config_home, "prniotlet", "config"))
 
-    async def final_print(self):
+    async def _final_print(self):
         rpc_con = await aiomas.rpc.open_connection((self.config["connection"]["host"],
                                                    self.config.getint("connection", "port", fallback=5555)),
                                                    codec=aiomas.MsgPack)
@@ -29,3 +29,6 @@ class PrnIOTlet:
         finally:
             await rpc_con.remote.close_session(session)
             await rpc_con.close()
+
+    def final_print(self):
+        aiomas.run(self._final_print())
