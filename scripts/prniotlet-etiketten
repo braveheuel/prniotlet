@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+#
+"""Print Text through python-escpos"""
+from escpos import printer
+import click
+import asyncio
+import prniotlet
+from PIL import Image
+
+def print_text(prn, txt):
+    prn.set(align="center", bold=True, width=2, height=2)
+    prn.block_text("Erbsensuppe", columns=16)
+    prn.print_and_feed()
+    prn.block_text("13.12.2020", columns=16)
+    prn.print_and_feed()
+    prn.print_and_feed()
+
+    prn.print_and_feed()
+    prn.print_and_feed()
+    prn.print_and_feed()
+    prn.print_and_feed()
+    prn.print_and_feed()
+    prn.print_and_feed()
+    prn.print_and_feed()
+
+def print_graphic(prn):
+    img = Image.new('RGB', (384, 7*30), color = 'red')
+    prn.image(img)
+    prn.control("LF")
+
+@click.command()
+@click.option("--text", required=False)
+@click.option("--graphic", required=False)
+def print_data(text, graphic):
+    """Print the specified data
+
+    :param caption: Title
+    :param text: Text to print
+    """
+    escpos_printer = prniotlet.PrnIOTlet()
+    escpos_printer.proxy.hw("init")
+    if text:
+        print_text(escpos_printer.proxy, text)
+    elif graphic:
+        print_graphic(escpos_printer.proxy)
+
+    escpos_printer.final_print()
+
+
+if __name__ == "__main__":
+    print_data()
