@@ -5,33 +5,21 @@ from escpos import printer
 import click
 import asyncio
 import prniotlet
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 
-def print_text(prn, txt):
-    prn.set(align="center", bold=True, width=2, height=2)
-    prn.block_text("Erbsensuppe", columns=16)
-    prn.print_and_feed()
-    prn.block_text("13.12.2020", columns=16)
-    prn.print_and_feed()
-    prn.print_and_feed()
-
-    prn.print_and_feed()
-    prn.print_and_feed()
-    prn.print_and_feed()
-    prn.print_and_feed()
-    prn.print_and_feed()
-    prn.print_and_feed()
-    prn.print_and_feed()
-
-def print_graphic(prn):
-    img = Image.new('RGB', (384, 7*30), color = 'red')
+def print_graphic(prn, width, height, text):
+    img = Image.new('RGB', (height, width), color = 'white')
+    draw = ImageDraw.Draw(img)
+    draw.multiline_text((0, 0), text, 
+            font=ImageFont.truetype("arial", 26), 
+            fill="black")
     prn.image(img)
-    prn.control("LF")
 
 @click.command()
-@click.option("--text", required=False)
-@click.option("--graphic", required=False)
-def print_data(text, graphic):
+@click.option("--height", required=False, default=272)
+@click.option("--width", required=False, default=378)
+@click.argument("text", required=True)
+def print_data(height, width, text):
     """Print the specified data
 
     :param caption: Title
@@ -39,10 +27,7 @@ def print_data(text, graphic):
     """
     escpos_printer = prniotlet.PrnIOTlet()
     escpos_printer.proxy.hw("init")
-    if text:
-        print_text(escpos_printer.proxy, text)
-    elif graphic:
-        print_graphic(escpos_printer.proxy)
+    print_graphic(escpos_printer.proxy, height, width, text)
 
     escpos_printer.final_print()
 
