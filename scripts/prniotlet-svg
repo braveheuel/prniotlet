@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+#
+"""Print Text through python-escpos"""
+from escpos import printer
+import click
+import asyncio
+import prniotlet
+from PIL import Image, ImageFont, ImageDraw
+import cairosvg
+from io import BytesIO
+
+
+def print_graphic(prn, svg):
+    out = BytesIO()
+    cairosvg.svg2png(url=svg, write_to=out)
+    img = Image.open(out)
+    prn.image(img)
+
+@click.command()
+@click.argument("svg", required=True)
+def print_data(svg):
+    """Print SVG file
+
+    :param svg: SVG-File
+    """
+    escpos_printer = prniotlet.PrnIOTlet()
+    escpos_printer.proxy.hw("init")
+    print_graphic(escpos_printer.proxy, svg)
+
+    escpos_printer.final_print()
+
+
+if __name__ == "__main__":
+    print_data()
