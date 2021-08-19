@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+#
+#
+"""
+Use SVG and Parse it to use Label to set the text
+"""
+import argparse
+import xml.etree.ElementTree as ET
+
+
+def set_field(xml_tree, label, value):
+    it = xml_tree.find(f".//*[@id='{label}']/")
+    if it is None:
+        print(f"Could not find '{label}' in SVG file, ignoring field")
+        return
+    if value:
+        it.text = value
+    else:
+        it.text = ""
+
+
+def labeldef(s):
+    try:
+        label, value = map(str, s.split(":", 1))
+        return label, value
+    except Exception:
+        raise argparse.ArgumentTypeError("Arguments should be in"
+                                         "form of 'label:Value'")
+
+
+def fill(args):
+    try:
+        tree = ET.parse(args.svg)
+    except FileNotFoundError as e:
+        print(e)
+    for label, value in args.valuepairs:
+        set_field(tree, label, value)
+
+
+def listf(args):
+    try:
+        tree = ET.parse(args.svg)
+    except FileNotFoundError as e:
+        print(e)
+    for i in tree.findall(".//*[@id]/"):
+        it = i.get("id")
+        if it is not None:
+            print(it)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+    subparser_fill = subparsers.add_parser("fill")
+    subparser_fill.add_argument("--svg", required=True, help="SVG "
+                                "File to use as Template")
+    subparser_fill.add_argument("valuepairs", type=labeldef, help="Set "
+                                "'label' of SVG to 'value', eg. "
+                                "'Name':'Hans'",
+                                nargs='+')
+    subparser_fill.set_defaults(func=fill)
+    subparser_list = subparsers.add_parser("list", help="List Label in SVG")
+    subparser_list.add_argument("--svg", required=True, help="SVG "
+                                "File to use as Template")
+    subparser_list.set_defaults(func=listf)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
