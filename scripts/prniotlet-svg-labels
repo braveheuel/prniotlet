@@ -6,6 +6,10 @@ Use SVG and Parse it to use Label to set the text
 """
 import argparse
 import xml.etree.ElementTree as ET
+import prniotlet
+import cairosvg
+from io import BytesIO
+from PIL import Image
 
 
 def set_field(xml_tree, label, value):
@@ -35,6 +39,17 @@ def fill(args):
         print(e)
     for label, value in args.valuepairs:
         set_field(tree, label, value)
+
+    escpos_printer = prniotlet.PrnIOTlet()
+    escpos_printer.proxy.hw("init")
+    out = BytesIO()
+    tree.write(out)
+    png = BytesIO()
+    cairosvg.svg2png(bytestring=out.getvalue(), write_to=png)
+    img = Image.open(png)
+    escpos_printer.proxy.image(img)
+
+    escpos_printer.final_print()
 
 
 def listf(args):
